@@ -1,0 +1,87 @@
+<main class="container">
+  <h1>Central de Chamados</h1>
+  <p class="subtitle">Angular 18 + ASP.NET Core 8 + SQL Server</p>
+
+  <section class="card">
+    <h2>Novo chamado</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        Título
+        <input type="text" formControlName="title" placeholder="Ex.: VPN não conecta" />
+        @if (form.controls.title.touched && form.controls.title.invalid) {
+          <small class="error">Informe um título (3 a 200 caracteres).</small>
+        }
+      </label>
+
+      <label>
+        Descrição
+        <textarea rows="3" formControlName="description"></textarea>
+        @if (form.controls.description.touched && form.controls.description.invalid) {
+          <small class="error">Informe a descrição.</small>
+        }
+      </label>
+
+      <label>
+        Prioridade
+        <select formControlName="priority">
+          @for (p of priorities; track p) {
+            <option [value]="p">{{ priorityLabels[p] }}</option>
+          }
+        </select>
+      </label>
+
+      <button type="submit">Abrir chamado</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="filters">
+      <input
+        type="search"
+        placeholder="Buscar..."
+        [(ngModel)]="search"
+        (keyup.enter)="load()"
+      />
+      <select [(ngModel)]="statusFilter" (change)="load()">
+        <option value="">Todos os status</option>
+        @for (s of statuses; track s) {
+          <option [value]="s">{{ statusLabels[s] }}</option>
+        }
+      </select>
+      <button type="button" (click)="load()">Filtrar</button>
+    </div>
+
+    @if (error()) {
+      <p class="error">{{ error() }}</p>
+    }
+
+    @if (loading()) {
+      <p>Carregando...</p>
+    } @else if (tickets().length === 0) {
+      <p>Nenhum chamado encontrado.</p>
+    } @else {
+      <ul class="tickets">
+        @for (t of tickets(); track t.id) {
+          <li>
+            <div class="ticket-head">
+              <strong>#{{ t.id }} — {{ t.title }}</strong>
+              <span class="badge priority-{{ t.priority }}">{{ priorityLabels[t.priority] }}</span>
+            </div>
+            <p>{{ t.description }}</p>
+            <div class="ticket-foot">
+              <small>Aberto em {{ t.createdAt | date: 'dd/MM/yyyy HH:mm' }}</small>
+              <span>
+                <select [value]="t.status" (change)="changeStatus(t, $any($event.target).value)">
+                  @for (s of statuses; track s) {
+                    <option [value]="s" [selected]="s === t.status">{{ statusLabels[s] }}</option>
+                  }
+                </select>
+                <button type="button" class="danger" (click)="remove(t)">Excluir</button>
+              </span>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</main>
